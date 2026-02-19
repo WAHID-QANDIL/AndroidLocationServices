@@ -6,22 +6,10 @@ import android.location.Geocoder
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import java.util.Locale
 
 object GeoCoder {
     private const val TAG = "GeoCoder"
-
-    val addressState = mutableStateOf(
-        AddressIfo(
-            "",
-            "",
-            "",
-            "",
-            "",
-        )
-    )
 
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)

@@ -18,30 +18,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
-import androidx.core.net.toUri
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -55,7 +39,7 @@ import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     companion object {
-        private const val PERMISSION_REQUEST_CODE = 909;
+        private const val PERMISSION_REQUEST_CODE = 909
         private const val TAG = "MainActivity"
         private const val SMS_MESSAGE_BODY =
             "Hello dear friend, my phone battery is almost die, this is my last know location updates"
@@ -84,38 +68,10 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(it),
                         location = location.value,
                         onSendLocationSmsClick = {
-                            val intent = Intent(Intent.ACTION_SENDTO).apply {
-                                data = Uri.parse("smsto:$SMS_MESSAGE_RECEIVER_NUMBER")
-                                val addressInfo: Address = GeoCoder.getAddressInformation(this@MainActivity,location.value.longitude,location.value.latitude)
-                                val addressIfo = AddressIfo(
-                                    fullAddress = addressInfo.getAddressLine(0),
-                                    city = addressInfo.featureName,
-                                    country = addressInfo.countryName,
-                                    postalCode = addressInfo.postalCode,
-                                    adminArea = addressInfo.adminArea,
-                                )
-                                Log.d(TAG, "onCreate: $addressIfo")
-                                putExtra(
-                                    "sms_body",
-                                    "$SMS_MESSAGE_BODY\n${addressIfo}"
-                                )
-                            }
-                            if (intent.resolveActivity(packageManager) != null) {
-                                startActivity(intent)
-                            } else {
-                                Toast.makeText(this, "No messaging app found", Toast.LENGTH_SHORT)
-                                    .show()
-                            }
+                            sendLocationSms()
                         },
                         onOpenGoogleMapsClick = {
-                            val locationVal = location.value
-                            openGoogleMapsDirectionBetween(
-                                sourceLatitude = locationVal.latitude+0.2,
-                                sourceLongitude = locationVal.longitude+0.2,
-                                destinationLatitude = locationVal.latitude+0.9,
-                                destinationLongitude = locationVal.longitude+0.4,
-                            )
-                            //TODO open google maps application
+                           openGoogleMaps()
                         },
                         dateConverter = {
                             longToReadableDate(it)
@@ -125,11 +81,50 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    private fun openGoogleMaps(){
+        val locationVal = location.value
+        openGoogleMapsDirectionBetween(
+            sourceLatitude = locationVal.latitude + 0.2,
+            sourceLongitude = locationVal.longitude + 0.2,
+            destinationLatitude = locationVal.latitude + 0.9,
+            destinationLongitude = locationVal.longitude + 0.4,
+        )
+    }
+
+    private fun sendLocationSms() {
+        val intent = Intent(Intent.ACTION_SENDTO).apply {
+            data = Uri.parse("smsto:$SMS_MESSAGE_RECEIVER_NUMBER")
+            val addressInfo: Address = GeoCoder.getAddressInformation(
+                this@MainActivity,
+                location.value.longitude,
+                location.value.latitude
+            )
+            val addressIfo = AddressIfo(
+                fullAddress = addressInfo.getAddressLine(0),
+                city = addressInfo.featureName,
+                country = addressInfo.countryName,
+                postalCode = addressInfo.postalCode,
+                adminArea = addressInfo.adminArea,
+            )
+            Log.d(TAG, "onCreate: $addressIfo")
+            putExtra(
+                "sms_body",
+                "$SMS_MESSAGE_BODY\n${addressIfo}"
+            )
+        }
+        if (intent.resolveActivity(packageManager) != null) {
+            startActivity(intent)
+        } else {
+            Toast.makeText(this, "No messaging app found", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun openGoogleMapsDirectionBetween(
         sourceLatitude: Double,
         sourceLongitude: Double,
         destinationLatitude: Double,
-        destinationLongitude: Double
+        destinationLongitude: Double,
     ) {
         val uri = Uri.parse(
             "https://maps.google.com/maps?saddr=$sourceLatitude,$sourceLongitude&daddr=$destinationLatitude,$destinationLongitude"
@@ -259,117 +254,4 @@ class MainActivity : ComponentActivity() {
         return locationServices.any { locationManager.isProviderEnabled(it) }
     }
 
-}
-
-@Composable
-fun LocationScreen(
-    location: Location,
-    onOpenGoogleMapsClick: () -> Unit,
-    onSendLocationSmsClick: () -> Unit,
-    dateConverter: (Long) -> String,
-    modifier: Modifier = Modifier,
-) {
-
-    Column(
-        modifier = modifier
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Column(modifier = Modifier
-                .fillMaxWidth(fraction = .5f)
-            ) {
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.CenterHorizontally),
-                    textAlign = TextAlign.Start,
-                    text = "LONGITUDE = ${location.longitude}",
-                    fontSize = 12.sp,
-                    softWrap = true
-                )
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.CenterHorizontally),
-                    textAlign = TextAlign.Start,
-                    text = "LATITUDE = ${location.latitude}",
-                    fontSize = 12.sp,
-                    softWrap = true
-                )
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.CenterHorizontally),
-                    textAlign = TextAlign.Start,
-                    text = "TIME = ${dateConverter(location.time)}",
-                    fontSize = 12.sp,
-                    softWrap = true
-                )
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.CenterHorizontally),
-                    textAlign = TextAlign.Start,
-                    text = "PROVIDER = ${location.provider}",
-                    fontSize = 12.sp,
-                    softWrap = true
-                )
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.CenterHorizontally),
-                    textAlign = TextAlign.Start,
-                    text = "ACCURACY = ${location.accuracy}",
-                    fontSize = 12.sp,
-                    softWrap = true
-                )
-
-
-            }
-        }
-        Spacer(Modifier.height(16.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-
-            Button(
-                onClick = onSendLocationSmsClick,
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(text = "Send SMS", textAlign = TextAlign.Center)
-            }
-
-            Button(
-                onClick = onOpenGoogleMapsClick,
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(text = "Open Maps", textAlign = TextAlign.Center)
-            }
-
-        }
-
-
-    }
-
-
-}
-
-
-@Preview
-@Composable
-private fun LocationScreenPreview() {
-    LocationScreen(
-        Location(""),
-        onSendLocationSmsClick = {},
-        onOpenGoogleMapsClick = {},
-        dateConverter = { "" },
-    )
 }
