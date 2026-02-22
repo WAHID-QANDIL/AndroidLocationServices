@@ -7,7 +7,6 @@ import android.location.Address
 import android.location.Location
 import android.location.LocationManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.provider.Settings
@@ -16,7 +15,6 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -51,7 +49,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var location: MutableState<Location>
 
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
 
 
@@ -155,7 +152,6 @@ class MainActivity : ComponentActivity() {
 
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
-    @RequiresApi(Build.VERSION_CODES.S)
     override fun onStart() {
         super.onStart()
         if (isPermissionsGraded()) {
@@ -176,7 +172,6 @@ class MainActivity : ComponentActivity() {
 
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
-    @RequiresApi(Build.VERSION_CODES.S)
     fun getLatestLocationUpdates() {
         fusedLocation = LocationServices.getFusedLocationProviderClient(this)
         fusedLocation.requestLocationUpdates(
@@ -199,16 +194,44 @@ class MainActivity : ComponentActivity() {
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun onRequestPermissionsResult(
         requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        Log.d(TAG, "onRequestPermissionsResult: @@@@@@@@ OUTER-LOG $requestCode")
+        when (requestCode) {
+
+            PERMISSION_REQUEST_CODE -> {
+                if (grantResults.any { it == PackageManager.PERMISSION_GRANTED }) {
+                    if (isLocationServiceEnabled()) {
+                        getLatestLocationUpdates()
+                        Log.d(TAG, "onRequestPermissionsResult: @@@@@@ INNER-LOG")
+                    } else {
+                        enableLocationService()
+                    }
+                }
+
+            }
+        }
+
+    }
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
         permissions: Array<out String?>,
         grantResults: IntArray,
         deviceId: Int,
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults, deviceId)
+
+        Log.d(TAG, "onRequestPermissionsResult: OUTER-LOG $requestCode")
         when (requestCode) {
+
             PERMISSION_REQUEST_CODE -> {
                 if (grantResults.any { it == PackageManager.PERMISSION_GRANTED }) {
                     if (isLocationServiceEnabled()) {
                         getLatestLocationUpdates()
+                        Log.d(TAG, "onRequestPermissionsResult: INNER-LOG")
                     } else {
                         enableLocationService()
                     }

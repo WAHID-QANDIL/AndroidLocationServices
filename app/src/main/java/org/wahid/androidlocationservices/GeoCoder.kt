@@ -3,16 +3,13 @@ package org.wahid.androidlocationservices
 import android.content.Context
 import android.location.Address
 import android.location.Geocoder
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import java.util.Locale
 
 object GeoCoder {
     private const val TAG = "GeoCoder"
 
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun getAddressInformation(
         context: Context,
         longitude: Double,
